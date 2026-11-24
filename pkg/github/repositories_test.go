@@ -2944,6 +2944,24 @@ func Test_CreateRepository(t *testing.T) {
 			expectError:    true,
 			expectedErrMsg: "failed to create repository",
 		},
+		{
+			name: "forbidden names the missing permission",
+			mockedClient: NewMockedHTTPClient(
+				WithRequestMatchHandler(
+					EndpointPattern("POST /orgs/{org}/repos"),
+					http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+						w.WriteHeader(http.StatusForbidden)
+						_, _ = w.Write([]byte(`{"message": "Resource not accessible by integration"}`))
+					}),
+				),
+			),
+			requestArgs: map[string]any{
+				"name":         "new-repo",
+				"organization": "my-org",
+			},
+			expectError:    true,
+			expectedErrMsg: "Administration",
+		},
 	}
 
 	for _, tc := range tests {

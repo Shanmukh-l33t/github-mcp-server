@@ -737,8 +737,13 @@ func CreateRepository(t translations.TranslationHelperFunc) inventory.ServerTool
 			}
 			createdRepo, resp, err := client.Repositories.Create(ctx, organization, repo)
 			if err != nil {
+				message := "failed to create repository"
+				if resp != nil && resp.StatusCode == http.StatusForbidden {
+					// GitHub App tokens need this permission granted on the installation; the bare 403 does not say so.
+					message += " (GitHub App and fine-grained tokens need the \"Administration\" or \"Repository creation\" permission with write access)"
+				}
 				return ghErrors.NewGitHubAPIErrorResponse(ctx,
-					"failed to create repository",
+					message,
 					resp,
 					err,
 				), nil, nil
